@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课表入历 · 飞书日历小组件</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body>
+<header><a class="brand" href="/" aria-label="课表入历首页"><span class="logo" aria-hidden="true">▦</span>课表入历</a><span class="local">本机运行</span></header>
+<main>
+  <div class="intro"><div><h1>把这一学期，<br>放进飞书日历。</h1><p>从教务系统保存的 HTML 开始。核对课程，授权账号，<br class="wide">让每一节课出现在该出现的时间。</p></div><div class="mini-calendar" aria-hidden="true"><div>一　 二　 三　 四　 五</div><span>09:00</span><i class="block b1">课程</i><i class="block b2">课程</i><span>14:00</span><i class="block b3">课程</i><i class="block b4">课程</i><span>19:00</span></div></div>
+  <div id="message" role="status" aria-live="polite" hidden></div>
+  <section class="panel" aria-labelledby="upload-title">
+    <div class="section-head"><span class="step">1</span><h2 id="upload-title">读取课表</h2><span class="hint">文件不会存到服务器磁盘</span></div>
+    <label id="dropzone" class="dropzone" for="file"><span class="file-icon" aria-hidden="true">↥</span><strong id="filename">选择或拖入课表 HTML</strong><span>支持厦大 / Wisedu 学期课表，最大 8 MB</span><input id="file" type="file" accept=".html,.htm,text/html"></label>
+    <details class="help"><summary>怎样保存课表文件？</summary><p>在教务系统打开课表，切换到<strong>学期课表</strong>并等待课程加载完毕。按 Ctrl+S（Mac：⌘S），保存为 HTML。只需上传 .html 文件，无需上传旁边的资源文件夹。其他学校或仅含空页面的 HTML 暂不支持。</p></details>
+  </section>
+  <section id="course-panel" class="panel" hidden aria-labelledby="course-title">
+    <div class="section-head"><span class="step">2</span><h2 id="course-title">核对课程</h2><span id="course-count" class="hint"></span></div>
+    <div id="warnings" class="warnings" hidden></div>
+    <div class="settings"><label>第 1 周的周一<input id="semester" type="date" required><small>按学校教学日历填写，不是今天的日期</small></label><label class="check"><input id="select-all" type="checkbox" checked>全选课程</label></div>
+    <div class="table-wrap"><table><thead><tr><th>导入</th><th>课程 / 教师</th><th>星期 / 节次</th><th>时间</th><th>周次</th><th>教室</th></tr></thead><tbody id="courses"></tbody></table></div>
+    <label id="ack-wrap" class="check acknowledgement" hidden><input id="ack" type="checkbox">我已核对提示与冲突，所选课程安排正确</label>
+    <button id="preview" class="primary" type="button">生成日程预览</button>
+    <div id="event-preview" class="event-preview" hidden><h3 id="preview-title"></h3><p id="date-range"></p><details><summary>查看具体日程</summary><div class="table-wrap event-list"><table><thead><tr><th>日期</th><th>课程</th><th>时间</th><th>教室</th></tr></thead><tbody id="events"></tbody></table></div></details></div>
+  </section>
+  <section class="panel" aria-labelledby="auth-title">
+    <div class="section-head"><span class="step">3</span><h2 id="auth-title">连接飞书日历</h2><span id="connection" class="status">尚未连接</span></div>
+    <details id="config-panel"><summary>首次使用：导入企业配置</summary><div class="config-content">
+      <p>向企业管理员领取 <strong>feishu-config.json</strong>，选择文件后即可使用企业统一创建的飞书应用，无需自行创建应用或填写密钥。</p>
+      <label class="config-upload" for="config-file">选择企业配置文件<input id="config-file" type="file" accept=".json,application/json"></label>
+      <p id="config-status" role="status">尚未导入企业配置</p>
+      <small>只需导入一次，配置保存在当前电脑。管理员更新应用密钥时，重新导入新配置即可。</small>
+      <details class="help"><summary>管理员：配置要求与手动填写</summary>
+        <p>使用企业已创建的应用，在<a href="https://open.feishu.cn/app" target="_blank" rel="noreferrer">飞书开放平台</a>开通以下<strong>用户身份权限</strong>，发布版本，并将使用者加入应用可用范围。</p>
+        <code>calendar:calendar:readonly<br>calendar:calendar.event:create</code><p>在「安全设置」添加重定向 URL（所有成员使用默认端口时可共用）：</p><code id="callback"></code>
+        <p>复制项目中的 examples/feishu-config.example.json，填入应用凭证并另存为 feishu-config.json，通过企业内部渠道发给成员。</p>
+        <div class="config-fields"><label>App ID<input id="app-id" placeholder="cli_…" autocomplete="off" spellcheck="false"></label><label>App Secret<input id="app-secret" type="password" placeholder="仅保存在本机" autocomplete="off"></label></div><button id="save-config" type="button">保存本机配置</button>
+        <small>企业配置含应用密钥，仅在企业内部发放；公开发布包只包含空白模板。</small>
+      </details>
+    </div></details>
+    <div class="auth-actions"><button id="authorize" type="button">授权飞书账号</button><button id="logout" class="text-button" type="button" hidden>断开本机连接</button></div>
+    <label id="calendar-wrap" hidden>导入到日历<select id="calendar"><option value="">请选择日历</option></select></label>
+    <div class="import-bar"><p id="import-note">先上传课表并生成预览，然后连接飞书。</p><button id="import" class="primary" type="button" disabled>确认导入</button></div>
+    <div id="progress-wrap" hidden><progress id="progress" value="0" max="1"></progress><p id="progress-text" role="status"></p><div id="import-errors" class="warnings" hidden></div></div>
+  </section>
+  <footer>课表仅在本机内存中解析，确认后通过飞书接口写入所选日历。<br>课表变更后需核对并重新导入；已导入的旧安排需在飞书手动修改或删除。</footer>
+</main>
+</body></html>
